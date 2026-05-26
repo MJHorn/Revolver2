@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revolver - 3D Volume & Surface of Revolution Visualizer</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Core App CSS -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Controls -->
+        <aside class="sidebar" id="controlSidebar">
+            <header class="app-header">
+                <div class="brand">
+                    <i class="fa-solid fa-rotate"></i>
+                    <h1>REVOLVER</h1>
+                </div>
+                <p class="subtitle">3D Revolution Visualizer</p>
+            </header>
+
+            <div class="sidebar-scroll">
+                <!-- Section 1: Function & Bounds -->
+                <section class="control-card active" id="sec-function">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-calculator"></i> Function & Bounds</h2>
+                        <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="card-body">
+                        <div class="input-group">
+                            <label for="func-input">Function $f(x)$</label>
+                            <div class="math-input-wrapper">
+                                <span class="math-y-prefix">y =</span>
+                                <input type="text" id="func-input" value="sqrt(x)" placeholder="e.g. sin(x) + 1.5, x^2">
+                            </div>
+                            <span class="input-helper">Use standard math notation like x^2, sin(x), sqrt(x), exp(x).</span>
+                        </div>
+
+                        <div class="row">
+                            <div class="input-group col-6">
+                                <label for="bound-a">Start $a$</label>
+                                <input type="number" id="bound-a" value="0" step="0.1" min="-20" max="20">
+                            </div>
+                            <div class="input-group col-6">
+                                <label for="bound-b">End $b$</label>
+                                <input type="number" id="bound-b" value="4" step="0.1" min="-20" max="20">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Axis of Rotation</label>
+                            <div class="radio-toggle">
+                                <input type="radio" id="axis-x" name="rotation-axis" value="x" checked>
+                                <label for="axis-x"><i class="fa-solid fa-arrows-left-right"></i> X-Axis ($y = 0$)</label>
+                                
+                                <input type="radio" id="axis-y" name="rotation-axis" value="y">
+                                <label for="axis-y"><i class="fa-solid fa-arrows-up-down"></i> Y-Axis ($x = 0$)</label>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <div class="label-with-value">
+                                <label for="sweep-slider">Sweep Angle</label>
+                                <span id="sweep-value" class="tech-value">360°</span>
+                            </div>
+                            <div class="slider-wrapper">
+                                <input type="range" id="sweep-slider" min="0" max="360" value="360">
+                                <button id="btn-animate-sweep" class="icon-btn" title="Animate Sweep">
+                                    <i class="fa-solid fa-play"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 3: Visual Settings -->
+                <section class="control-card collapsed" id="sec-visuals">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-sliders"></i> Visual Settings</h2>
+                        <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="card-body">
+                        <div class="input-group">
+                            <label for="material-select">Material Style</label>
+                            <select id="material-select">
+                                <option value="glass" selected>Translucent Glass</option>
+                                <option value="solid">Solid Glossy</option>
+                                <option value="wireframe">Neon Wireframe</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="color-select">Color Theme</label>
+                            <select id="color-select">
+                                <option value="cyberpunk" selected>Cyberpunk Neon (Cyan-Magenta)</option>
+                                <option value="sunset">Sunset Flare (Orange-Violet)</option>
+                                <option value="emerald">Emerald Sea (Teal-Green)</option>
+                                <option value="golden">Golden Hour (Gold-Amber)</option>
+                            </select>
+                        </div>
+
+                        <div class="row">
+                            <div class="input-group col-6 flex-row">
+                                <input type="checkbox" id="show-axes" checked>
+                                <label for="show-axes" class="checkbox-label">Show 3D Grid</label>
+                            </div>
+                            <div class="input-group col-6 flex-row">
+                                <input type="checkbox" id="show-skeleton" checked>
+                                <label for="show-skeleton" class="checkbox-label">Show Original Curve</label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="input-group col-12 flex-row">
+                                <input type="checkbox" id="close-solid">
+                                <label for="close-solid" class="checkbox-label">Close Solid Mesh (Show Solid vs Surface)</label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+            </div>
+        </aside>
+
+        <!-- 3D Viewport Area -->
+        <main class="viewport-container">
+            <div id="canvas-3d-container"></div>
+            
+            <!-- Floating UI Panels -->
+            <div class="viewport-overlay-top">
+                <button id="sidebar-toggle" class="overlay-btn" title="Toggle Controls">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="viewport-title-card">
+                    <span class="status-badge live">3D STAGE</span>
+                    <span id="viewport-subtitle">Sweep: 360° | Axis: X-Axis</span>
+                </div>
+                <button id="btn-reset-camera" class="overlay-btn" title="Reset Viewport Camera">
+                    <i class="fa-solid fa-camera-rotate"></i>
+                </button>
+            </div>
+
+            <div class="viewport-overlay-bottom">
+                <div class="control-hints">
+                    <span><i class="fa-solid fa-mouse"></i> Left-Click + Drag: <strong>Orbit</strong></span>
+                    <span><i class="fa-solid fa-mouse-pointer"></i> Right-Click + Drag: <strong>Pan</strong></span>
+                    <span><i class="fa-solid fa-scroll"></i> Scroll Wheel: <strong>Zoom</strong></span>
+                </div>
+            </div>
+
+            <!-- Error Toast Notification -->
+            <div id="error-toast" class="error-toast">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span id="error-message">Invalid mathematical function expression.</span>
+            </div>
+        </main>
+    </div>
+
+    <!-- MathJax for rendering pretty math, loaded safely -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <!-- CDN Libraries: Three.js, OrbitControls, Math.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+
+    <!-- Core App Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
