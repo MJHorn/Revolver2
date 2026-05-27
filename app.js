@@ -567,7 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (activeMode === 'single') {
                 // 1. GENERATE VERTICES AND COLORS FOR SINGLE CURVE
                 for (let i = 0; i <= nx; i++) {
-                    const u = uVals[i];
+                    const u = region.points[i].u;
                     const v = region.points[i].v1; // Use actual curve 1 value
 
                     for (let j = 0; j <= nphi; j++) {
