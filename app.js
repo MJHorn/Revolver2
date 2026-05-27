@@ -449,8 +449,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             for (let i = 0; i <= nx; i++) {
                 const pt = region.points[i];
-                let tx = (region.indepVar === 'x') ? pt.u : pt.vMax;
-                let ty = (region.indepVar === 'x') ? pt.vMax : pt.u;
+                let tx = (region.indepVar === 'x') ? pt.u : (activeMode === 'single' ? pt.v1 : pt.vMax);
+                let ty = (region.indepVar === 'x') ? (activeMode === 'single' ? pt.v1 : pt.vMax) : pt.u;
                 topPoints.push(new THREE.Vector3(tx, ty, 0));
 
                 let bx = (region.indepVar === 'x') ? pt.u : pt.vMin;
@@ -476,22 +476,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const lineTop = new THREE.Line(topGeom, lineMatTop);
             skeletonLine.add(lineTop);
 
-            // Draw bottom boundary curve
-            const bottomGeom = new THREE.BufferGeometry().setFromPoints(bottomPoints);
-            const lineBottom = new THREE.Line(bottomGeom, lineMatBottom);
-            skeletonLine.add(lineBottom);
+            if (activeMode !== 'single') {
+                // Draw bottom boundary curve
+                const bottomGeom = new THREE.BufferGeometry().setFromPoints(bottomPoints);
+                const lineBottom = new THREE.Line(bottomGeom, lineMatBottom);
+                skeletonLine.add(lineBottom);
 
-            // Draw left end cap boundary line
-            const leftCapPoints = [bottomPoints[0], topPoints[0]];
-            const leftGeom = new THREE.BufferGeometry().setFromPoints(leftCapPoints);
-            const lineLeft = new THREE.Line(leftGeom, lineMatTop);
-            skeletonLine.add(lineLeft);
+                // Draw left end cap boundary line
+                const leftCapPoints = [bottomPoints[0], topPoints[0]];
+                const leftGeom = new THREE.BufferGeometry().setFromPoints(leftCapPoints);
+                const lineLeft = new THREE.Line(leftGeom, lineMatTop);
+                skeletonLine.add(lineLeft);
 
-            // Draw right end cap boundary line
-            const rightCapPoints = [bottomPoints[nx], topPoints[nx]];
-            const rightGeom = new THREE.BufferGeometry().setFromPoints(rightCapPoints);
-            const lineRight = new THREE.Line(rightGeom, lineMatTop);
-            skeletonLine.add(lineRight);
+                // Draw right end cap boundary line
+                const rightCapPoints = [bottomPoints[nx], topPoints[nx]];
+                const rightGeom = new THREE.BufferGeometry().setFromPoints(rightCapPoints);
+                const lineRight = new THREE.Line(rightGeom, lineMatTop);
+                skeletonLine.add(lineRight);
+            }
 
             scene.add(skeletonLine);
         }
@@ -526,183 +528,233 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (maxSweepAngle < 0.001) {
             // Sweep is 0°! Render a highly optimized double-sided flat 2D shaded area inside 3D stage at z = 0
-            for (let i = 0; i <= nx; i++) {
-                const pt = region.points[i];
-                let tx = (region.indepVar === 'x') ? pt.u : pt.vMax;
-                let ty = (region.indepVar === 'x') ? pt.vMax : pt.u;
-                
-                let bx = (region.indepVar === 'x') ? pt.u : pt.vMin;
-                let by = (region.indepVar === 'x') ? pt.vMin : pt.u;
-
-                // Add top vertex
-                vertices.push(tx, ty, 0);
-                const cT = getRadiusColor(isAxisX ? ty : tx);
-                colors.push(cT.r, cT.g, cT.b);
-
-                // Add bottom vertex
-                vertices.push(bx, by, 0);
-                const cB = getRadiusColor(isAxisX ? by : bx);
-                colors.push(cB.r, cB.g, cB.b);
-            }
-
-            // Build triangles connecting successive points
-            for (let i = 0; i < nx; i++) {
-                const tA = i * 2;
-                const bA = i * 2 + 1;
-                const tB = (i + 1) * 2;
-                const bB = (i + 1) * 2 + 1;
-
-                indices.push(tA, bA, tB);
-                indices.push(tB, bA, bB);
-            }
-        } else {
-            // Sweep is > 0°! Revolve the parametric 3D grid
-            const vGrid = (nx + 1) * (nphi + 1);
-            const topIndex = (i, j) => i * (nphi + 1) + j;
-            const bottomIndex = (i, j) => vGrid + i * (nphi + 1) + j;
-
-            // Precompute values along the curve
-            const uVals = [];
-            const vMinVals = [];
-            const vMaxVals = [];
-            for (let i = 0; i <= nx; i++) {
-                const pt = region.points[i];
-                uVals.push(pt.u);
-                vMinVals.push(pt.vMin);
-                vMaxVals.push(pt.vMax);
-            }
-
-            // 1. GENERATE VERTICES AND COLORS
-            // Top Grid (vMax)
-            for (let i = 0; i <= nx; i++) {
-                const u = uVals[i];
-                const v = vMaxVals[i];
-
-                for (let j = 0; j <= nphi; j++) {
-                    const phi = (j / nphi) * maxSweepAngle;
+            if (activeMode === 'single') {
+                // In single mode with sweep = 0, we don't need any shaded area!
+                // The curve itself is already drawn by the skeletonLine.
+            } else {
+                for (let i = 0; i <= nx; i++) {
+                    const pt = region.points[i];
+                    let tx = (region.indepVar === 'x') ? pt.u : pt.vMax;
+                    let ty = (region.indepVar === 'x') ? pt.vMax : pt.u;
                     
-                    let vx, vy, vz;
-                    let x = (region.indepVar === 'x') ? u : v;
-                    let y = (region.indepVar === 'x') ? v : u;
+                    let bx = (region.indepVar === 'x') ? pt.u : pt.vMin;
+                    let by = (region.indepVar === 'x') ? pt.vMin : pt.u;
 
-                    if (isAxisX) {
-                        vx = x;
-                        vy = y * Math.cos(phi);
-                        vz = y * Math.sin(phi);
-                    } else {
-                        vx = x * Math.cos(phi);
-                        vy = y;
-                        vz = x * Math.sin(phi);
-                    }
+                    // Add top vertex
+                    vertices.push(tx, ty, 0);
+                    const cT = getRadiusColor(isAxisX ? ty : tx);
+                    colors.push(cT.r, cT.g, cT.b);
 
-                    vertices.push(vx, vy, vz);
-                    const c = getRadiusColor(isAxisX ? y : x);
-                    colors.push(c.r, c.g, c.b);
+                    // Add bottom vertex
+                    vertices.push(bx, by, 0);
+                    const cB = getRadiusColor(isAxisX ? by : bx);
+                    colors.push(cB.r, cB.g, cB.b);
                 }
-            }
 
-            // Bottom Grid (vMin)
-            for (let i = 0; i <= nx; i++) {
-                const u = uVals[i];
-                const v = vMinVals[i];
-
-                for (let j = 0; j <= nphi; j++) {
-                    const phi = (j / nphi) * maxSweepAngle;
-                    
-                    let vx, vy, vz;
-                    let x = (region.indepVar === 'x') ? u : v;
-                    let y = (region.indepVar === 'x') ? v : u;
-
-                    if (isAxisX) {
-                        vx = x;
-                        vy = y * Math.cos(phi);
-                        vz = y * Math.sin(phi);
-                    } else {
-                        vx = x * Math.cos(phi);
-                        vy = y;
-                        vz = x * Math.sin(phi);
-                    }
-
-                    vertices.push(vx, vy, vz);
-                    const c = getRadiusColor(isAxisX ? y : x);
-                    colors.push(c.r, c.g, c.b);
-                }
-            }
-
-            // 2. GENERATE FACES INDICES
-            // A. Top Surface
-            for (let i = 0; i < nx; i++) {
-                for (let j = 0; j < nphi; j++) {
-                    const aIdx = topIndex(i, j);
-                    const bIdx = topIndex(i + 1, j);
-                    const cIdx = topIndex(i + 1, j + 1);
-                    const dIdx = topIndex(i, j + 1);
-
-                    indices.push(aIdx, bIdx, dIdx);
-                    indices.push(bIdx, cIdx, dIdx);
-                }
-            }
-
-            // B. Bottom Surface
-            for (let i = 0; i < nx; i++) {
-                for (let j = 0; j < nphi; j++) {
-                    const aIdx = bottomIndex(i, j);
-                    const bIdx = bottomIndex(i + 1, j);
-                    const cIdx = bottomIndex(i + 1, j + 1);
-                    const dIdx = bottomIndex(i, j + 1);
-
-                    // Reverse winding order for outward facing normals
-                    indices.push(aIdx, dIdx, bIdx);
-                    indices.push(bIdx, dIdx, cIdx);
-                }
-            }
-
-            // Closed Caps (Start Cap, End Cap, Side caps)
-            const isClosedLoop = Math.abs(maxSweepAngle - Math.PI * 2) < 1e-4;
-            if (!isClosedLoop) {
-                // C. Start Cap (phi = 0, j = 0)
+                // Build triangles connecting successive points
                 for (let i = 0; i < nx; i++) {
-                    const tA = topIndex(i, 0);
-                    const tB = topIndex(i + 1, 0);
-                    const bA = bottomIndex(i, 0);
-                    const bB = bottomIndex(i + 1, 0);
+                    const tA = i * 2;
+                    const bA = i * 2 + 1;
+                    const tB = (i + 1) * 2;
+                    const bB = (i + 1) * 2 + 1;
 
                     indices.push(tA, bA, tB);
                     indices.push(tB, bA, bB);
                 }
+            }
+        } else {
+            // Sweep is > 0°! Revolve the parametric 3D grid
+            if (activeMode === 'single') {
+                // 1. GENERATE VERTICES AND COLORS FOR SINGLE CURVE
+                for (let i = 0; i <= nx; i++) {
+                    const u = uVals[i];
+                    const v = region.points[i].v1; // Use actual curve 1 value
 
-                // D. End Cap (phi = maxSweepAngle, j = nphi)
+                    for (let j = 0; j <= nphi; j++) {
+                        const phi = (j / nphi) * maxSweepAngle;
+                        
+                        let vx, vy, vz;
+                        let x = u;
+                        let y = v;
+
+                        if (isAxisX) {
+                            vx = x;
+                            vy = y * Math.cos(phi);
+                            vz = y * Math.sin(phi);
+                        } else {
+                            vx = x * Math.cos(phi);
+                            vy = y;
+                            vz = x * Math.sin(phi);
+                        }
+
+                        vertices.push(vx, vy, vz);
+                        const c = getRadiusColor(isAxisX ? y : x);
+                        colors.push(c.r, c.g, c.b);
+                    }
+                }
+
+                // 2. GENERATE FACES INDICES FOR SINGLE CURVE
+                const vertexIndex = (i, j) => i * (nphi + 1) + j;
                 for (let i = 0; i < nx; i++) {
-                    const tA = topIndex(i, nphi);
-                    const tB = topIndex(i + 1, nphi);
-                    const bA = bottomIndex(i, nphi);
-                    const bB = bottomIndex(i + 1, nphi);
+                    for (let j = 0; j < nphi; j++) {
+                        const aIdx = vertexIndex(i, j);
+                        const bIdx = vertexIndex(i + 1, j);
+                        const cIdx = vertexIndex(i + 1, j + 1);
+                        const dIdx = vertexIndex(i, j + 1);
+
+                        indices.push(aIdx, bIdx, dIdx);
+                        indices.push(bIdx, cIdx, dIdx);
+                    }
+                }
+            } else {
+                // ORIGINAL BOUNDED SOLID REVOLUTION
+                const vGrid = (nx + 1) * (nphi + 1);
+                const topIndex = (i, j) => i * (nphi + 1) + j;
+                const bottomIndex = (i, j) => vGrid + i * (nphi + 1) + j;
+
+                // Precompute values along the curve
+                const uVals = [];
+                const vMinVals = [];
+                const vMaxVals = [];
+                for (let i = 0; i <= nx; i++) {
+                    const pt = region.points[i];
+                    uVals.push(pt.u);
+                    vMinVals.push(pt.vMin);
+                    vMaxVals.push(pt.vMax);
+                }
+
+                // 1. GENERATE VERTICES AND COLORS
+                // Top Grid (vMax)
+                for (let i = 0; i <= nx; i++) {
+                    const u = uVals[i];
+                    const v = vMaxVals[i];
+
+                    for (let j = 0; j <= nphi; j++) {
+                        const phi = (j / nphi) * maxSweepAngle;
+                        
+                        let vx, vy, vz;
+                        let x = (region.indepVar === 'x') ? u : v;
+                        let y = (region.indepVar === 'x') ? v : u;
+
+                        if (isAxisX) {
+                            vx = x;
+                            vy = y * Math.cos(phi);
+                            vz = y * Math.sin(phi);
+                        } else {
+                            vx = x * Math.cos(phi);
+                            vy = y;
+                            vz = x * Math.sin(phi);
+                        }
+
+                        vertices.push(vx, vy, vz);
+                        const c = getRadiusColor(isAxisX ? y : x);
+                        colors.push(c.r, c.g, c.b);
+                    }
+                }
+
+                // Bottom Grid (vMin)
+                for (let i = 0; i <= nx; i++) {
+                    const u = uVals[i];
+                    const v = vMinVals[i];
+
+                    for (let j = 0; j <= nphi; j++) {
+                        const phi = (j / nphi) * maxSweepAngle;
+                        
+                        let vx, vy, vz;
+                        let x = (region.indepVar === 'x') ? u : v;
+                        let y = (region.indepVar === 'x') ? v : u;
+
+                        if (isAxisX) {
+                            vx = x;
+                            vy = y * Math.cos(phi);
+                            vz = y * Math.sin(phi);
+                        } else {
+                            vx = x * Math.cos(phi);
+                            vy = y;
+                            vz = x * Math.sin(phi);
+                        }
+
+                        vertices.push(vx, vy, vz);
+                        const c = getRadiusColor(isAxisX ? y : x);
+                        colors.push(c.r, c.g, c.b);
+                    }
+                }
+
+                // 2. GENERATE FACES INDICES
+                // A. Top Surface
+                for (let i = 0; i < nx; i++) {
+                    for (let j = 0; j < nphi; j++) {
+                        const aIdx = topIndex(i, j);
+                        const bIdx = topIndex(i + 1, j);
+                        const cIdx = topIndex(i + 1, j + 1);
+                        const dIdx = topIndex(i, j + 1);
+
+                        indices.push(aIdx, bIdx, dIdx);
+                        indices.push(bIdx, cIdx, dIdx);
+                    }
+                }
+
+                // B. Bottom Surface
+                for (let i = 0; i < nx; i++) {
+                    for (let j = 0; j < nphi; j++) {
+                        const aIdx = bottomIndex(i, j);
+                        const bIdx = bottomIndex(i + 1, j);
+                        const cIdx = bottomIndex(i + 1, j + 1);
+                        const dIdx = bottomIndex(i, j + 1);
+
+                        // Reverse winding order for outward facing normals
+                        indices.push(aIdx, dIdx, bIdx);
+                        indices.push(bIdx, dIdx, cIdx);
+                    }
+                }
+
+                // Closed Caps (Start Cap, End Cap, Side caps)
+                const isClosedLoop = Math.abs(maxSweepAngle - Math.PI * 2) < 1e-4;
+                if (!isClosedLoop) {
+                    // C. Start Cap (phi = 0, j = 0)
+                    for (let i = 0; i < nx; i++) {
+                        const tA = topIndex(i, 0);
+                        const tB = topIndex(i + 1, 0);
+                        const bA = bottomIndex(i, 0);
+                        const bB = bottomIndex(i + 1, 0);
+
+                        indices.push(tA, bA, tB);
+                        indices.push(tB, bA, bB);
+                    }
+
+                    // D. End Cap (phi = maxSweepAngle, j = nphi)
+                    for (let i = 0; i < nx; i++) {
+                        const tA = topIndex(i, nphi);
+                        const tB = topIndex(i + 1, nphi);
+                        const bA = bottomIndex(i, nphi);
+                        const bB = bottomIndex(i + 1, nphi);
+
+                        indices.push(tA, tB, bA);
+                        indices.push(tB, bB, bA);
+                    }
+                }
+
+                // E. Left End Boundary Wall (u = uMin, i = 0)
+                for (let j = 0; j < nphi; j++) {
+                    const tA = topIndex(0, j);
+                    const tB = topIndex(0, j + 1);
+                    const bA = bottomIndex(0, j);
+                    const bB = bottomIndex(0, j + 1);
 
                     indices.push(tA, tB, bA);
                     indices.push(tB, bB, bA);
                 }
-            }
 
-            // E. Left End Boundary Wall (u = uMin, i = 0)
-            for (let j = 0; j < nphi; j++) {
-                const tA = topIndex(0, j);
-                const tB = topIndex(0, j + 1);
-                const bA = bottomIndex(0, j);
-                const bB = bottomIndex(0, j + 1);
+                // F. Right End Boundary Wall (u = uMax, i = nx)
+                for (let j = 0; j < nphi; j++) {
+                    const tA = topIndex(nx, j);
+                    const tB = topIndex(nx, j + 1);
+                    const bA = bottomIndex(nx, j);
+                    const bB = bottomIndex(nx, j + 1);
 
-                indices.push(tA, tB, bA);
-                indices.push(tB, bB, bA);
-            }
-
-            // F. Right End Boundary Wall (u = uMax, i = nx)
-            for (let j = 0; j < nphi; j++) {
-                const tA = topIndex(nx, j);
-                const tB = topIndex(nx, j + 1);
-                const bA = bottomIndex(nx, j);
-                const bB = bottomIndex(nx, j + 1);
-
-                indices.push(tA, bA, tB);
-                indices.push(tB, bA, bB);
+                    indices.push(tA, bA, tB);
+                    indices.push(tB, bA, bB);
+                }
             }
         }
 
