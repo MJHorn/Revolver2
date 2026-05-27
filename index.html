@@ -8,7 +8,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Architects+Daughter&display=swap" rel="stylesheet">
     
     <!-- Core App CSS -->
     <link rel="stylesheet" href="style.css">
@@ -22,48 +22,90 @@
         <aside class="sidebar" id="controlSidebar">
             <header class="app-header">
                 <div class="brand">
-                    <i class="fa-solid fa-rotate"></i>
+                    <i class="fa-solid fa-compass-drafting"></i>
                     <h1>REVOLVER</h1>
                 </div>
                 <p class="subtitle">3D Revolution Visualizer</p>
             </header>
 
             <div class="sidebar-scroll">
-                <!-- Section 1: Function & Bounds -->
-                <section class="control-card active" id="sec-function">
-                    <div class="card-header">
-                        <h2><i class="fa-solid fa-calculator"></i> Function & Bounds</h2>
-                        <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                <div class="control-card">
+                    <!-- Elegant Drafting Tabs -->
+                    <div class="tabs-container">
+                        <button type="button" class="tab-btn active" id="tab-single">Single Curve</button>
+                        <button type="button" class="tab-btn" id="tab-bounded">Bounded Region</button>
                     </div>
+
                     <div class="card-body">
-                        <div class="input-group">
-                            <label for="func-input">Function $f(x)$</label>
-                            <div class="math-input-wrapper">
-                                <span class="math-y-prefix">y =</span>
-                                <input type="text" id="func-input" value="sqrt(x)" placeholder="e.g. sin(x) + 1.5, x^2">
+                        <!-- Single Curve Panel (Active by default) -->
+                        <div id="panel-single" class="tab-panel active">
+                            <div class="input-group">
+                                <label for="single-func-input">Function $f(x)$</label>
+                                <div class="math-input-wrapper">
+                                    <span class="math-y-prefix">y =</span>
+                                    <input type="text" id="single-func-input" value="4/x" placeholder="e.g. x^2, sin(x)">
+                                </div>
+                                <span class="input-helper">Use standard math notation like x^2, sin(x).</span>
                             </div>
-                            <span class="input-helper">Use standard math notation like x^2, sin(x), sqrt(x), exp(x).</span>
+
+                            <div class="row">
+                                <div class="input-group col-6">
+                                    <label for="single-bound-a">Start $a$</label>
+                                    <input type="number" id="single-bound-a" value="0.8" step="0.1">
+                                </div>
+                                <div class="input-group col-6">
+                                    <label for="single-bound-b">End $b$</label>
+                                    <input type="number" id="single-bound-b" value="5.2" step="0.1">
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="row">
-                            <div class="input-group col-6">
-                                <label for="bound-a">Start $a$</label>
-                                <input type="number" id="bound-a" value="0" step="0.1" min="-20" max="20">
+                        <!-- Bounded Region Panel (Hidden by default) -->
+                        <div id="panel-bounded" class="tab-panel" style="display: none;">
+                            <div class="input-group">
+                                <label for="curve-1-input">Curve 1</label>
+                                <div class="math-input-wrapper">
+                                    <button type="button" class="curve-type-toggle" id="curve-1-type">y =</button>
+                                    <input type="text" id="curve-1-input" value="4/x" placeholder="e.g. 4/x, x^2">
+                                </div>
                             </div>
-                            <div class="input-group col-6">
-                                <label for="bound-b">End $b$</label>
-                                <input type="number" id="bound-b" value="4" step="0.1" min="-20" max="20">
+
+                            <div class="input-group">
+                                <label for="curve-2-input">Curve 2</label>
+                                <div class="math-input-wrapper">
+                                    <button type="button" class="curve-type-toggle" id="curve-2-type">y =</button>
+                                    <input type="text" id="curve-2-input" value="6 - x" placeholder="e.g. 6 - x, 0">
+                                </div>
                             </div>
+
+                            <div class="row">
+                                <div class="input-group col-6">
+                                    <label for="curve-3-input">Curve 3</label>
+                                    <div class="math-input-wrapper">
+                                        <button type="button" class="curve-type-toggle" id="curve-3-type">x =</button>
+                                        <input type="text" id="curve-3-input" value="0.8" placeholder="e.g. 0.8, -1">
+                                    </div>
+                                </div>
+                                <div class="input-group col-6">
+                                    <label for="curve-4-input">Curve 4</label>
+                                    <div class="math-input-wrapper">
+                                        <button type="button" class="curve-type-toggle" id="curve-4-type">x =</button>
+                                        <input type="text" id="curve-4-input" value="5.2" placeholder="e.g. 5.2, 4">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <span class="input-helper">Define 4 curves to bound a region. Click labels to toggle between y= and x=.</span>
                         </div>
 
                         <div class="input-group">
                             <label>Axis of Rotation</label>
                             <div class="radio-toggle">
                                 <input type="radio" id="axis-x" name="rotation-axis" value="x" checked>
-                                <label for="axis-x"><i class="fa-solid fa-arrows-left-right"></i> X-Axis ($y = 0$)</label>
+                                <label for="axis-x"><i class="fa-solid fa-arrows-left-right"></i> X-Axis (y = 0)</label>
                                 
                                 <input type="radio" id="axis-y" name="rotation-axis" value="y">
-                                <label for="axis-y"><i class="fa-solid fa-arrows-up-down"></i> Y-Axis ($x = 0$)</label>
+                                <label for="axis-y"><i class="fa-solid fa-arrows-up-down"></i> Y-Axis (x = 0)</label>
                             </div>
                         </div>
 
@@ -80,53 +122,8 @@
                             </div>
                         </div>
                     </div>
-                </section>
+                </div>
 
-                <!-- Section 3: Visual Settings -->
-                <section class="control-card collapsed" id="sec-visuals">
-                    <div class="card-header">
-                        <h2><i class="fa-solid fa-sliders"></i> Visual Settings</h2>
-                        <i class="fa-solid fa-chevron-down toggle-icon"></i>
-                    </div>
-                    <div class="card-body">
-                        <div class="input-group">
-                            <label for="material-select">Material Style</label>
-                            <select id="material-select">
-                                <option value="glass" selected>Translucent Glass</option>
-                                <option value="solid">Solid Glossy</option>
-                                <option value="wireframe">Neon Wireframe</option>
-                            </select>
-                        </div>
-
-                        <div class="input-group">
-                            <label for="color-select">Color Theme</label>
-                            <select id="color-select">
-                                <option value="cyberpunk" selected>Cyberpunk Neon (Cyan-Magenta)</option>
-                                <option value="sunset">Sunset Flare (Orange-Violet)</option>
-                                <option value="emerald">Emerald Sea (Teal-Green)</option>
-                                <option value="golden">Golden Hour (Gold-Amber)</option>
-                            </select>
-                        </div>
-
-                        <div class="row">
-                            <div class="input-group col-6 flex-row">
-                                <input type="checkbox" id="show-axes" checked>
-                                <label for="show-axes" class="checkbox-label">Show 3D Grid</label>
-                            </div>
-                            <div class="input-group col-6 flex-row">
-                                <input type="checkbox" id="show-skeleton" checked>
-                                <label for="show-skeleton" class="checkbox-label">Show Original Curve</label>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="input-group col-12 flex-row">
-                                <input type="checkbox" id="close-solid">
-                                <label for="close-solid" class="checkbox-label">Close Solid Mesh (Show Solid vs Surface)</label>
-                            </div>
-                        </div>
-                    </div>
-                </section>
 
 
             </div>
